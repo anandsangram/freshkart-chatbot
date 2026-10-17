@@ -8,9 +8,20 @@ from langchain_core.messages import HumanMessage, AIMessage  # type: ignore[impo
 st.set_page_config(page_title="FreshKart Support Desk", page_icon="🛒", layout="wide")
 st.title("FreshKart Support Desk")
 load_dotenv()
-if not os.getenv("OPENROUTER_API_KEY"):
-    st.error("OPENROUTER_API_KEY is missing. Copy .env.example to .env, add your key, and restart.")
+try:
+    api_key = st.secrets.get("OPENROUTER_API_KEY")
+    model = st.secrets.get("MODEL")
+except st.errors.StreamlitSecretNotFoundError:
+    api_key = model = None
+
+api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+model = model or os.getenv("MODEL")
+if not api_key:
+    st.error("OPENROUTER_API_KEY is missing. Add it to Streamlit app secrets or your local .env file, then restart.")
     st.stop()
+os.environ["OPENROUTER_API_KEY"] = api_key
+if model:
+    os.environ["MODEL"] = model
 from bot import (TICKETS, orders, customers, inventory, riders, router, reply_chain, get_history,
                  get_order, get_customer, order_id_from)
 
